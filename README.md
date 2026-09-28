@@ -218,6 +218,15 @@ serial console with `0` / `1` / `2` / `q`.
 
 ---
 
+## Keywords
+
+`llm` · `tiny-llm` · `mcu` · `embedded` · `bare-metal` · `riscv` · `esp32` ·
+`esp32-p4` · `esp-idf` · `psram` · `c11` · `cpu-inference` · `on-device-ai` ·
+`edge-ai` · `quantization` · `mixture-of-experts` · `moe` · `inference-engine` ·
+`zero-dependencies` · `pytorch`
+
+---
+
 ## License
 
 **Apache License 2.0** — see [LICENSE](LICENSE).

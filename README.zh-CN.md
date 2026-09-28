@@ -210,6 +210,18 @@ gcc -O2 -std=c11 -I main -o host_verify host_verify.c main/kmcu.c -lm
 
 ---
 
+## 关键词
+
+**仓库 topics（英文，与 GitHub 上设置的同一套）**：`llm` · `tiny-llm` · `mcu` ·
+`embedded` · `bare-metal` · `riscv` · `esp32` · `esp32-p4` · `esp-idf` · `psram` ·
+`c11` · `cpu-inference` · `on-device-ai` · `edge-ai` · `quantization` ·
+`mixture-of-experts` · `moe` · `inference-engine` · `zero-dependencies` · `pytorch`
+
+**中文检索词**：微型语言模型 · MCU 上跑大模型 · ESP32-P4 · RISC-V 32 位 ·
+端侧推理 · 嵌入式 AI · 边缘计算 · 量化推理 · 稀疏专家 MoE · 纯 C / 零依赖
+
+---
+
 ## 许可证
 
 **Apache License 2.0** —— 全文见 [LICENSE](LICENSE)。
