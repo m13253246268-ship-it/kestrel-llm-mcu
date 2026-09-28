@@ -1,0 +1,46 @@
+# Kestrel-MCU 默认配置（SKU 32054 = ESP32-P4）
+CONFIG_IDF_TARGET="esp32p4"
+
+# Flash：板载 16MB NOR；使用自定义分区表（含 model 权重分区）
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="16MB"
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+CONFIG_PARTITION_TABLE_FILENAME="partitions.csv"
+
+# 切回 Newlib：ESP-IDF v6.0 默认 picolibc，其 riscv32 C++ 头文件在
+# 多架构 no-rtti 子目录下同样受 Windows 路径长度限制，切 Newlib 减少变量。
+CONFIG_LIBC_NEWLIB=y
+
+# 启用 RTTI（默认禁用）：ESP-IDF 默认给 C++ 加 -fno-rtti，而 GCC 会据此把
+# C++ 标准头解析到多架构 no-rtti 子目录，路径形如
+#   ...\riscv32-esp-elf\include\c++\15.2.0\riscv32-esp-elf\
+#      rv32imafc_zicsr_zifencei_zaamo_zalrsc\ilp32f\no-rtti\bits\c++config.h
+# 叠加工具链安装前缀后总长 261 字符，超过 Windows MAX_PATH(260)，
+# 导致 "fatal error: bits/c++config.h: No such file or directory"。
+# 启用 RTTI 后使用 -frtti，路径退回 ilp32f（少 8 字符）即可正常编译。
+CONFIG_COMPILER_CXX_RTTI=y
+
+# 32MB PSRAM：使能并设为主力堆（权重常驻/工作缓冲）
+# ESP32-P4 的 PSRAM 为八线（hex）模式，非 quad。
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_HEX=y
+CONFIG_SPIRAM_USE_MALLOC=y
+CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL=16384
+
+# FAT 长文件名（TF 卡读写探针 + 后续权重文件）
+CONFIG_FATFS_LFN_HEAP=y
+CONFIG_FATFS_MAX_LFN=255
+
+# 关闭任务看门狗：decode 单步约 1.6s 不喂狗，属计算型批处理任务
+CONFIG_ESP_TASK_WDT_EN=n
+CONFIG_ESP_INT_WDT=n
+
+# 优化等级改 -O2。默认 -Og 会禁用循环优化，导致标量 GEMV 的
+# `#pragma GCC unroll` 基本失效（实测 M3-2 行对齐后反而 0.90 → 0.81 tok/s）。
+# 本项目是纯计算热循环，无调试器需求，故切 PERF。
+CONFIG_COMPILER_OPTIMIZATION_PERF=y
+
+# 关闭本项目不依赖的组件，缩小固件
+CONFIG_ESP_WIFI_ENABLED=n
+CONFIG_BT_ENABLED=n

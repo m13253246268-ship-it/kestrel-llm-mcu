@@ -1,0 +1,48 @@
+# ============================================================
+# Kestrel-MCU  .gitignore
+# ============================================================
+
+# --- ESP-IDF 构建产物 ---
+build/
+sdkconfig
+sdkconfig.old
+managed_components/
+dependencies.lock
+flash_args
+flasher_args.json
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# --- 主机侧编译产物（host_verify 等，可用 gcc 一行重建） ---
+*.exe
+*.o
+*.obj
+*.elf
+*.map
+*.a
+*.d
+
+# --- 模型权重 / 量化镜像（体积大，不入库） ---
+*.kmcu
+*.safetensors
+*.gguf
+*.pt
+*.pth
+*.onnx
+*.bin
+
+# --- 训练 / 运行日志 ---
+*.log
+
+# --- 编辑器 / 操作系统 ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini

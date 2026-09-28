@@ -1,0 +1,65 @@
+Kestrel-MCU
+Copyright 2026 Pei Xiaoguang (裴晓光)
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+================================================================================
+Scope: this repository ships source code only
+================================================================================
+
+No model weights, tokenizer files, datasets, or quantized (*.kmcu) images are
+distributed with this repository. See "Model artifacts" below.
+
+================================================================================
+Third-party components
+================================================================================
+
+The following components are NOT vendored here; they are obtained separately by
+the user. They remain under their own licenses:
+
+  Component                     License        Source
+  ----------------------------  -------------  --------------------------------------------
+  ESP-IDF                       Apache-2.0     https://github.com/espressif/esp-idf
+  PyTorch                       BSD-3-Clause   https://github.com/pytorch/pytorch
+  HuggingFace transformers      Apache-2.0     https://github.com/huggingface/transformers
+  safetensors                   Apache-2.0     https://github.com/huggingface/safetensors
+  NumPy                         BSD-3-Clause   https://github.com/numpy/numpy
+  SciPy (optional, erf)         BSD-3-Clause   https://github.com/scipy/scipy
+  pyserial                      BSD-3-Clause   https://github.com/pyserial/pyserial
+
+================================================================================
+Vendored third-party code (derived work distributed WITH this repository)
+================================================================================
+
+Unlike the components listed above, the file below IS shipped inside this
+repository and is a derivative of a third-party work. Its upstream origin is
+therefore recorded here, as required by Apache-2.0 §4(a)-(c):
+
+  File                  Origin                                License
+  --------------------  ------------------------------------  -------------
+  main/pie_dotprod.S    Espressif ESP-DL, function            Apache-2.0
+                        dl_esp32p4_dotprod_i16k8o16
+                        https://github.com/espressif/esp-dl
+
+  Upstream copyright: Espressif Systems (Shanghai) CO LTD.
+
+  Modification (stated per Apache-2.0 §4(b)): per the file's own header comment,
+  only the function name and signature were changed — it returns int32 without
+  saturation (instead of a saturated result) so that GEMV can apply an fp32
+  scale and accumulate. See the header comment in main/pie_dotprod.S for the
+  authoritative statement.
+
+  The file's header comment also carries this provenance.
+
+================================================================================
+Model artifacts (NOT part of this repository)
+================================================================================
+
+Trained weights, tokenizer files and quantized images are produced by the user
+during training/conversion and are deliberately excluded (see .gitignore).
+
+Such artifacts may be subject to their own upstream terms — for example the
+license of the base model whose weights were fine-tuned, or of the tokenizer
+used for training. Those terms are independent of, and are not superseded by,
+this project's license. Users are responsible for complying with them before
+redistributing any weights or tokenizer derived from a third-party model.
