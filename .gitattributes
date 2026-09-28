@@ -1,0 +1,14 @@
+# Normalize line endings: store LF in the repository, checkout as LF everywhere.
+* text=auto eol=lf
+
+# Explicitly binary — never normalize line endings in these.
+*.kmcu          binary
+*.safetensors   binary
+*.gguf          binary
+*.bin           binary
+*.pyc           binary
+*.exe           binary
+*.o             binary
+*.png           binary
+*.jpg           binary
+*.gif           binary

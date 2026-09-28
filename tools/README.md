@@ -150,11 +150,18 @@ python convert_minueza.py --src <hf_dir> --out <file.kmcu> [--top_k 2]
 
 | Argument | Default | Meaning |
 |---|---|---|
-| `--src` | `E:\models` | source dir containing `config.json` + `model.safetensors` |
-| `--out` | `E:\models\model.kmcu` | output image |
+| `--src` | `model_dir` (env `KMCU_SRC`) | source dir containing `config.json` + `model.safetensors` |
+| `--out` | `model.kmcu` (env `KMCU_OUT`) | output image |
 | `--top_k` | 2 | MoE top-k (ignored for dense; config `top_k` wins if present) |
+| `--force-tie` | off | force `lm_head` to reuse `tok_embed` (drops the trained output head). **Lossy** — reproduces the historical M1–M3 image (Minueza: 22.81M / 12.58 MB, fits the Flash `model` partition) |
 
-> The defaults point at the author's local model directory — **always pass `--src`/`--out`.**
+> Defaults are relative to the current directory. Override them with `--src`/`--out`
+> or the `KMCU_SRC`/`KMCU_OUT` environment variables.
+>
+> `tied_embed` is taken from `config.json` (`tie_word_embeddings`) unless `--force-tie` is passed.
+> The cost of forcing the tie is **not** just the 9.98M saved parameters: on Minueza the two images
+> produce **completely different** greedy text — forced-tie yields word salad, the untied default
+> yields fluent English. See the article series, `02-模型量化与KMCU格式`.
 
 The converter also writes `<src>/model.kmcu.manifest.txt` (human-readable header +
 per-tensor table) for cross-checking.
@@ -231,7 +238,7 @@ Expected output looks like:
 [cls] n_cls=4
 n_tensors=346  params=64.36M  q4=23.36M
 file size = 20.77 MB   (tied_embed=1, moe=True n_expert=8 top_k=2 ple_dim=128 ple_gamma=0.028555)
-written: E:\models\agent_model.kmcu
+written: agent_model.kmcu
 ```
 
 ---
@@ -288,7 +295,7 @@ Trains `MistralPLE` on a pre-tokenized flat token stream. Recipe:
 **full training + pure CE + AdamW + cosine**, no freezing, no KD, no dense fallback.
 
 ```bash
-python train_moe_ple.py --out_dir E:/models/moe_ple_fw --max_steps 30000
+python train_moe_ple.py --out_dir moe_ple_fw --max_steps 30000
 python train_moe_ple.py --smoke          # 1 fwd+bwd, checks the setup runs
 ```
 
@@ -296,7 +303,7 @@ Data: flat `uint16` token arrays (Mistral vocab 32002), e.g. `fw_train.bin` / `f
 
 | Argument | Default | Meaning |
 |---|---|---|
-| `--out_dir` | `E:\models\moe_ple_fw` | checkpoint output |
+| `--out_dir` | `moe_ple_fw` (env `KMCU_OUT_DIR`) | checkpoint output |
 | `--max_steps` | 30000 | optimizer steps |
 | `--batch_size` / `--seq_len` | 32 / 512 | |
 | `--lr` / `--warmup` | 3e-4 / 500 | cosine decays to `0.1 × peak` |
@@ -306,7 +313,7 @@ Data: flat `uint16` token arrays (Mistral vocab 32002), e.g. `fw_train.bin` / `f
 | `--n_expert` / `--top_k` / `--ffn_e` / `--ple_dim` | 8 / 2 / 128 / 128 | |
 | `--no_ternary` | off | keep `ple_table` in fp32 instead of ternary STE |
 | `--seed` | 0 | |
-| `--train_bin` / `--val_bin` | `E:\models\fw_*.bin` | **override these** |
+| `--train_bin` / `--val_bin` | `fw_train.bin` / `fw_val.bin` (env `KMCU_TRAIN_BIN`/`KMCU_VAL_BIN`) | **override these** |
 
 Optimizer details: AdamW `betas=(0.9, 0.95)`, `weight_decay=0.1` for `ndim ≥ 2`
 weights (excluding `table`/`embed_tokens`), `0.0` otherwise; grad-norm clip 1.0.
@@ -397,9 +404,11 @@ only depend on modules inside `legacy/`.
 
 ## Porting notes / known limitations
 
-1. **Hard-coded Windows defaults.** Several scripts default to author-local paths
-   (`E:\models`, `E:\models_smollm135m\...`). Always pass `--src`/`--out`/`--km`/
-   `--train_bin`/`--val_bin` explicitly.
+1. **Legacy scripts still carry author-local Windows defaults.** Scripts under
+   `legacy/` default to paths such as `E:\models\...`; always pass their path arguments
+   explicitly. Mainline tools default to relative paths and can be redirected with the
+   `KMCU_*` environment variables (`KMCU_SRC`, `KMCU_OUT`, `KMCU_KM`, `KMCU_REF_OUT`,
+   `KMCU_OUT_DIR`, `KMCU_TRAIN_BIN`, `KMCU_VAL_BIN`, `KMCU_FILE`, `KMCU_PORT`).
 2. **Vocab is fixed at 32002** (Mistral tokenizer) in the training scripts; the
    converter itself reads `vocab_size` from `config.json`.
 3. **KMCU is little-endian** and its layout is co-designed with `main/kmcu.c`. Any change

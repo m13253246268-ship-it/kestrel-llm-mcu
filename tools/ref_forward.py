@@ -19,7 +19,7 @@ except ImportError:
     import math
     erf = np.vectorize(math.erf)
 
-KM = r"E:\models\model.kmcu"
+KM = os.environ.get("KMCU_KM", "model.kmcu")
 
 DT_F32 = 1
 DT_Q4 = 2
@@ -312,7 +312,7 @@ def main():
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("--km", default=KM, help="KMCU 文件路径")
-    ap.add_argument("--ref_out", default=r"E:\models\ref_out.txt")
+    ap.add_argument("--ref_out", default=os.environ.get("KMCU_REF_OUT", "ref_out.txt"))
     args = ap.parse_args()
     if not os.path.isfile(args.km):
         print("缺少", args.km)

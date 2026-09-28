@@ -6,7 +6,7 @@
 范式：全量训练 + 纯 CE + AdamW + cosine（与已验证配方一致，无冻结、无 KD、无 dense 兜底）。
 
 用法：
-  python train_moe_ple.py --out_dir E:/models/moe_ple_fw --max_steps 30000
+  python train_moe_ple.py --out_dir moe_ple_fw --max_steps 30000
 """
 import argparse
 import math
@@ -20,8 +20,8 @@ import torch
 sys.path.insert(0, os.path.dirname(__file__))
 from mistral_ple import MistralPLE, MistralPLEConfig  # noqa: E402
 
-TRAIN_BIN = r"E:\models\fw_train.bin"
-VAL_BIN = r"E:\models\fw_val.bin"
+TRAIN_BIN = os.environ.get("KMCU_TRAIN_BIN", "fw_train.bin")
+VAL_BIN = os.environ.get("KMCU_VAL_BIN", "fw_val.bin")
 
 
 class Batcher:
@@ -55,7 +55,7 @@ def lr_at(step, total, peak, warmup):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out_dir", default=r"E:\models\moe_ple_fw")
+    ap.add_argument("--out_dir", default=os.environ.get("KMCU_OUT_DIR", "moe_ple_fw"))
     ap.add_argument("--max_steps", type=int, default=30000)
     ap.add_argument("--batch_size", type=int, default=32)
     ap.add_argument("--seq_len", type=int, default=512)

@@ -148,11 +148,17 @@ python convert_minueza.py --src <hf_dir> --out <file.kmcu> [--top_k 2]
 
 | 参数 | 默认 | 含义 |
 |---|---|---|
-| `--src` | `E:\models` | 源目录（含 `config.json` + `model.safetensors`） |
-| `--out` | `E:\models\model.kmcu` | 输出镜像 |
+| `--src` | `model_dir`（环境变量 `KMCU_SRC`） | 源目录（含 `config.json` + `model.safetensors`） |
+| `--out` | `model.kmcu`（环境变量 `KMCU_OUT`） | 输出镜像 |
 | `--top_k` | 2 | MoE top-k（稠密忽略；config 里有 `top_k` 时以 config 为准） |
+| `--force-tie` | 关 | 强制 `lm_head` 复用 `tok_embed`（丢弃已训练的输出头）。**有损**，用于复现历史 M1–M3 镜像（Minueza：22.81M / 12.58 MB，装得进 Flash `model` 分区） |
 
-> 默认值指向作者的本地模型目录——**请始终显式传 `--src`/`--out`**。
+> 默认值为当前目录下的相对路径；可用 `--src`/`--out` 或环境变量
+> `KMCU_SRC`/`KMCU_OUT` 覆盖。
+>
+> `tied_embed` 默认取自 `config.json` 的 `tie_word_embeddings`，只有传 `--force-tie` 才强制共享。
+> 强制共享的代价**不只是省下的 9.98M 参数**：在 Minueza 上两种镜像的贪心输出**完全不同**——
+> 强制共享是词沙拉，尊重配置（默认）是通顺英文。详见文章系列 `02-模型量化与KMCU格式`。
 
 转换同时会写 `<src>/model.kmcu.manifest.txt`（可读的 header + 逐张量表），便于人工核对。
 
@@ -227,7 +233,7 @@ python convert_minueza.py --src E:/models/agent_model --out E:/models/agent_mode
 [cls] n_cls=4
 n_tensors=346  params=64.36M  q4=23.36M
 file size = 20.77 MB   (tied_embed=1, moe=True n_expert=8 top_k=2 ple_dim=128 ple_gamma=0.028555)
-written: E:\models\agent_model.kmcu
+written: agent_model.kmcu
 ```
 
 ---
@@ -281,7 +287,7 @@ gcc -O2 -std=c11 -I main -o host_verify host_verify.c main/kmcu.c -lm
 **全量训练 + 纯 CE + AdamW + cosine**，无冻结、无 KD、无 dense 兜底。
 
 ```bash
-python train_moe_ple.py --out_dir E:/models/moe_ple_fw --max_steps 30000
+python train_moe_ple.py --out_dir moe_ple_fw --max_steps 30000
 python train_moe_ple.py --smoke          # 1 步 fwd+bwd，验证配置可跑
 ```
 
@@ -289,7 +295,7 @@ python train_moe_ple.py --smoke          # 1 步 fwd+bwd，验证配置可跑
 
 | 参数 | 默认 | 含义 |
 |---|---|---|
-| `--out_dir` | `E:\models\moe_ple_fw` | checkpoint 输出目录 |
+| `--out_dir` | `moe_ple_fw`（环境变量 `KMCU_OUT_DIR`） | checkpoint 输出目录 |
 | `--max_steps` | 30000 | 优化步数 |
 | `--batch_size` / `--seq_len` | 32 / 512 | |
 | `--lr` / `--warmup` | 3e-4 / 500 | cosine 衰减到 `0.1 × 峰值` |
@@ -299,7 +305,7 @@ python train_moe_ple.py --smoke          # 1 步 fwd+bwd，验证配置可跑
 | `--n_expert` / `--top_k` / `--ffn_e` / `--ple_dim` | 8 / 2 / 128 / 128 | |
 | `--no_ternary` | 关 | `ple_table` 保持 fp32（不做三值 STE） |
 | `--seed` | 0 | |
-| `--train_bin` / `--val_bin` | `E:\models\fw_*.bin` | **请覆盖** |
+| `--train_bin` / `--val_bin` | `fw_train.bin` / `fw_val.bin`（环境变量 `KMCU_TRAIN_BIN`/`KMCU_VAL_BIN`） | **请覆盖** |
 
 优化器细节：AdamW `betas=(0.9, 0.95)`；`ndim ≥ 2` 的权重（排除 `table`/`embed_tokens`）
 `weight_decay=0.1`，其余 `0.0`；梯度范数裁剪 1.0。
@@ -385,9 +391,10 @@ python upload_uart.py COM6 <file.kmcu>
 
 ## 移植注意 / 已知限制
 
-1. **硬编码的 Windows 默认路径。** 若干脚本默认指向作者本地路径
-   （`E:\models`、`E:\models_smollm135m\...`）。请显式传
-   `--src`/`--out`/`--km`/`--train_bin`/`--val_bin`。
+1. **`legacy/` 下的历史脚本仍带作者本地 Windows 默认路径**（如 `E:\models\...`），
+   使用这些脚本时请显式传路径参数。主线工具已改为相对路径，并可用 `KMCU_*`
+   环境变量重定向（`KMCU_SRC`、`KMCU_OUT`、`KMCU_KM`、`KMCU_REF_OUT`、
+   `KMCU_OUT_DIR`、`KMCU_TRAIN_BIN`、`KMCU_VAL_BIN`、`KMCU_FILE`、`KMCU_PORT`）。
 2. **词表固定 32002**（Mistral tokenizer）——仅限训练脚本；转换脚本本身从
    `config.json` 读 `vocab_size`。
 3. **KMCU 为小端**，其布局与 `main/kmcu.c` 协同设计。任何格式改动都必须同步到

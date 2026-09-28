@@ -326,7 +326,7 @@ while the firmware prints "switching to 921600 after 3 seconds" and sends neithe
 |---|---|---|
 | `git submodule init failed for components/esp_wifi/lib` (gitee 423) | submodule repository is blocked | `IDF_SKIP_CHECK_SUBMODULES=1` (this project has WiFi/BT disabled, safe) |
 | `std::filesystem ... Illegal byte sequence` | **ccache on a non-ASCII path** (`E:\项目\...`) | `idf.py --no-ccache` + put the build in a pure-ASCII directory (`C:\kmcu`) |
-| `fatal error: bits/error_constants.h: No such file` | **MAX_PATH exceeded**: the header's full path is 259 characters (`c++config.h` in the same directory at 251 characters passes), the prefix `C:\Users\Administrator\.espressif\...` is too long | create a directory junction `C:\et` → `.espressif`, set `IDF_TOOLS_PATH=C:\et` (shortens by 28 characters, **changes no system settings**) |
+| `fatal error: bits/error_constants.h: No such file` | **MAX_PATH exceeded**: the header's full path is 259 characters (`c++config.h` in the same directory at 251 characters passes), the prefix `C:\Users\<user>\.espressif\...` is too long | create a directory junction `C:\et` → `.espressif`, set `IDF_TOOLS_PATH=C:\et` (shortens by 28 characters, **changes no system settings**) |
 
 > Lesson: **ESP-IDF builds on Windows are extremely sensitive to "non-ASCII path + long path + submodule network"**, and
 > any one of them can make the on-device build non-reproducible. After fixing these three points, the build passes stably.
@@ -389,6 +389,10 @@ f32 ≈ 156 MB / q8 ≈ 39 MB / ternary ≈ 8 MB).
 ## 11. Artifacts and Reproduction
 
 ### Artifacts
+
+> Note: the paths below record the **local layout at the time of writing** (a working
+> directory named `models/`, i.e. `E:\models`). They are **not** part of this repository;
+> substitute your own paths. Only the shapes and sizes are meant to be comparable.
 
 | path | description |
 |---|---|

@@ -46,7 +46,7 @@ later tiny networks.
 | Component | Version / location |
 |---|---|
 | ESP-IDF | v6.0.2 → `E:\esp-idf` (Gitee mirror clone) |
-| Toolchain | riscv32-esp-elf 15.2.0 → `C:\Users\Administrator\.espressif` |
+| Toolchain | riscv32-esp-elf 15.2.0 → `%USERPROFILE%\.espressif` |
 | Python | 3.12.9 (IDF-dedicated venv) |
 | Serial port | COM5 (Type-C USB serial device, i.e. this development board) |
 
@@ -55,7 +55,7 @@ later tiny networks.
 ```powershell
 # 0) Short drive-letter alias: the real toolchain path is too deep and triggers the Windows MAX_PATH(260) limit
 #    After mapping, the C++ standard header path drops from 261 characters to ~229. Must be re-run after a reboot.
-subst X: "C:\Users\Administrator\.espressif"
+subst X: "%USERPROFILE%\.espressif"
 
 $env:IDF_TOOLS_PATH = "X:\"
 $env:IDF_SKIP_CHECK_SUBMODULES = "1"   # the esp32-wifi-lib submodule is blocked on Gitee; this project has WiFi/BT disabled

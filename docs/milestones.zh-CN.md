@@ -43,7 +43,7 @@
 | 组件 | 版本 / 位置 |
 |---|---|
 | ESP-IDF | v6.0.2 → `E:\esp-idf`（Gitee 镜像克隆） |
-| 工具链 | riscv32-esp-elf 15.2.0 → `C:\Users\Administrator\.espressif` |
+| 工具链 | riscv32-esp-elf 15.2.0 → `%USERPROFILE%\.espressif` |
 | Python | 3.12.9（IDF 专用 venv） |
 | 串口 | COM5（Type-C USB 串行设备，即本开发板） |
 
@@ -52,7 +52,7 @@
 ```powershell
 # 0) 短盘符别名：工具链真实路径过深，会触发 Windows MAX_PATH(260) 限制
 #    映射后 C++ 标准头路径从 261 字符降到 ~229。重开机后需重新执行。
-subst X: "C:\Users\Administrator\.espressif"
+subst X: "%USERPROFILE%\.espressif"
 
 $env:IDF_TOOLS_PATH = "X:\"
 $env:IDF_SKIP_CHECK_SUBMODULES = "1"   # esp32-wifi-lib 子模块在 Gitee 被封锁，本项目已禁用 WiFi/BT

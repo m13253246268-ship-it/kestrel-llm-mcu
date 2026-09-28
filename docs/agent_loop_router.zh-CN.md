@@ -327,7 +327,7 @@ Name: TW000  Type: SDHC  Speed: 4.00 MHz  Size: 29818MB  (bus_width=1)
 |---|---|---|
 | `git submodule init failed for components/esp_wifi/lib`（gitee 423） | 子模块仓库被屏蔽 | `IDF_SKIP_CHECK_SUBMODULES=1`（本项目已禁 WiFi/BT，安全） |
 | `std::filesystem ... Illegal byte sequence` | **ccache 在非 ASCII 路径**（`E:\项目\...`） | `idf.py --no-ccache` + 构建放纯 ASCII 目录（`C:\kmcu`） |
-| `fatal error: bits/error_constants.h: No such file` | **MAX_PATH 越界**：该头文件完整路径 259 字符（同目录 `c++config.h` 251 字符能过），前缀 `C:\Users\Administrator\.espressif\...` 过长 | 建目录 junction `C:\et` → `.espressif`，设 `IDF_TOOLS_PATH=C:\et`（缩短 28 字符，**不改任何系统设置**） |
+| `fatal error: bits/error_constants.h: No such file` | **MAX_PATH 越界**：该头文件完整路径 259 字符（同目录 `c++config.h` 251 字符能过），前缀 `C:\Users\<user>\.espressif\...` 过长 | 建目录 junction `C:\et` → `.espressif`，设 `IDF_TOOLS_PATH=C:\et`（缩短 28 字符，**不改任何系统设置**） |
 
 > 教训：**Windows 上 ESP-IDF 构建对「非 ASCII 路径 + 长路径 + 子模块网络」三者极敏感**，
 > 任一项都能让板端构建不可复现。修完这三点后构建稳定通过。
@@ -390,6 +390,9 @@ f32 ≈ 156 MB / q8 ≈ 39 MB / 三值 ≈ 8 MB）。
 ## 11. 产物与复现
 
 ### 产物
+
+> 说明：下表的路径记录的是**编写时的本地布局**（一个名为 `models/` 的工作目录，即 `E:\models`），
+> **不属于本仓库**，请替换为你自己的路径；这里只有「形状与体积」是可对照的。
 
 | 路径 | 说明 |
 |---|---|

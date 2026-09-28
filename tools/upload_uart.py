@@ -9,7 +9,7 @@ upload_uart.py - 通过 UART 把 model.kmcu 上传到 ESP32-P4 的 TF 卡。
   再按 8192 字节分块发送，每块等 1 字节 ACK(0x06) 作流控。
 
 用法：
-  python upload_uart.py            # 默认 COM5 + E:\\models_smollm135m\\model.kmcu
+  python upload_uart.py            # 默认 COM5 + ./model.kmcu
   python upload_uart.py COM6 <file>
 """
 import os
@@ -20,7 +20,7 @@ import time
 import serial
 
 PORT = sys.argv[1] if len(sys.argv) > 1 else "COM5"
-FILE = sys.argv[2] if len(sys.argv) > 2 else r"E:\models_smollm135m\model.kmcu"
+FILE = sys.argv[2] if len(sys.argv) > 2 else os.environ.get("KMCU_FILE", "model.kmcu")
 
 BLOCK = 8192
 

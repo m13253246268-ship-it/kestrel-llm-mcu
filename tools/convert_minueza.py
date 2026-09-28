@@ -60,8 +60,9 @@ import sys
 
 import numpy as np
 
-SRC_DIR = r"E:\models"
-OUT_PATH = r"E:\models\model.kmcu"
+# 默认值不绑定本机路径；可用环境变量或命令行参数覆盖。
+SRC_DIR = os.environ.get("KMCU_SRC", "model_dir")
+OUT_PATH = os.environ.get("KMCU_OUT", "model.kmcu")
 
 BLOCK = 32
 Q4_BYTES = 18
@@ -130,6 +131,9 @@ def main():
     ap.add_argument("--src", default=SRC_DIR, help="源模型目录（含 config.json + model.safetensors）")
     ap.add_argument("--out", default=OUT_PATH, help="输出 KMCU 文件路径")
     ap.add_argument("--top_k", type=int, default=2, help="MoE top-k（稠密忽略）")
+    ap.add_argument("--force-tie", action="store_true",
+                    help="强制 lm_head 复用 tok_embed（文件中不存 lm_head）。"
+                         "这是有损变更：会丢弃已训练的输出头，仅用于复现历史 M1–M3 镜像口径")
     args = ap.parse_args()
 
     cfg_path = os.path.join(args.src, "config.json")
@@ -176,13 +180,19 @@ def main():
     ple_dim = int(cfg.get("ple_dim", 0))
     has_ple = ple_dim > 0
 
-    # tied head：优先读配置，回退到历史行为（稠密 tied、MoE 独立）
-    if "tie_word_embeddings" in cfg:
+    # tied head：优先读配置，回退到历史行为（稠密 tied、MoE 独立）；
+    # --force-tie 显式强制共享（有损：丢弃 lm_head，复现历史 M1–M3 镜像口径）
+    if args.force_tie:
+        tied = 1
+    elif "tie_word_embeddings" in cfg:
         tied = 1 if cfg["tie_word_embeddings"] else 0
     else:
         tied = 0 if is_moe else 1
 
     has_lm_head = "lm_head.weight" in keys
+    if args.force_tie:
+        print("[tie] --force-tie：丢弃 lm_head，改用 tok_embed 作输出头（有损）"
+              + ("；源模型确实带 lm_head" if has_lm_head else ""))
 
     # 决策头：cls_head.weight 存在即挂决策头（分类头，可选分支）
     n_cls = 0
